@@ -54,4 +54,13 @@ dkms.conf
 # debug information files
 *.dwo
 
+# ide files
 .idea/
+
+# debug files
+core
+.gdb_history
+
+# output files
+dijkstra
+traverse
