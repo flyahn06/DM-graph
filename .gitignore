@@ -56,6 +56,7 @@ dkms.conf
 
 # ide files
 .idea/
+.vscode/
 
 # debug files
 core
