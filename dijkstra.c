@@ -16,6 +16,7 @@ int min(int *, int, int*, int);
 int in(int, int*, int);
 void dijkstra(biased_matrics *);
 void update_path(int **, int, int);
+void free_all(biased_matrics *);
 
 int main() {
     biased_matrics matrics;
@@ -25,6 +26,7 @@ int main() {
     read_file("input2_2.txt", &matrics);
     print_matrics(&matrics);
     dijkstra(&matrics);
+    free_all(&matrics);
 
     return 0;
 }
@@ -213,4 +215,18 @@ void read_file(const char* filename, biased_matrics *result) {
 
     fclose(fp);
     free(line);
+}
+
+void free_all(biased_matrics *m) {
+    for (int k = 0; k < m->matrics_count; k++) {
+        int size = m->matrics_size[k];
+        int **mat = m->biased_adjacent_matrics[k];
+
+        for (int i = 0; i < size; i++)
+            free(mat[i]);
+
+        free(mat);
+    }
+    free(m->biased_adjacent_matrics);
+    free(m->matrics_size);
 }
