@@ -129,27 +129,22 @@ int in(int needle, int *haystack, int size) {
     return 0;
 }
 
-int min(int *target, int size, int* without, int without_size) {
-    int min_index;
-    int min_element;
-
-    if (size < 1) return -1;
-
-    min_index = 0;
-    min_element = target[0];
+int min(int *target, int size, int *without, int without_size) {
+    int min_index = -1;
+    int min_element = -1;
 
     for (int i = 0; i < size; i++) {
+        if (target[i] < 0) continue;
         if (in(i, without, without_size)) continue;
-        if (target[i] == -1) continue;
 
-        if (min_element == 0 || min_element > target[i]) {
+        if (min_index == -1 || target[i] < min_element) {
             min_index = i;
             min_element = target[i];
         }
     }
-
     return min_index;
 }
+
 
 void print_matrics(biased_matrics *result) {
     for (int i = 0; i < result->matrics_count; i++) {
