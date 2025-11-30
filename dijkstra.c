@@ -15,13 +15,14 @@ void print_matrics(biased_matrics*);
 int min(int *, int, int*, int);
 int in(int, int*, int);
 void dijkstra(biased_matrics *);
+void update_path(int **, int, int);
 
 int main() {
     biased_matrics matrics;
 
     setbuf(stdin, 0);
     setbuf(stdout, 0);
-    read_file("input2_1.txt", &matrics);
+    read_file("input2_2.txt", &matrics);
     print_matrics(&matrics);
     dijkstra(&matrics);
 
@@ -36,15 +37,22 @@ void dijkstra(biased_matrics *matrics) {
     int **current_matrix;
     int current_iter;
     int dist;
+    int **path;
 
     if (matrics->matrics_count == 0) return;
 
-    for (int i = 0; i < matrics->matrics_count; i++) {
-        size = matrics->matrics_size[i];
-        current_matrix = matrics->biased_adjacent_matrics[i];
+    for (int k = 0; k < matrics->matrics_count; k++) {
+        size = matrics->matrics_size[k];
+        current_matrix = matrics->biased_adjacent_matrics[k];
         D = calloc(sizeof(int), size - 1);
         S = calloc(sizeof(int), size);
         w = 0;
+
+        path = malloc(sizeof(int *) * size);
+        for (int i = 0; i < size; i++) {
+            path[i] = calloc(sizeof(int), size + 1); // null termination 고려
+            path[i][0] = 1;
+        }
 
         for (int i = 1; i < size; i++) {
             D[i] = current_matrix[w][i];
@@ -61,10 +69,12 @@ void dijkstra(biased_matrics *matrics) {
                 if (current_matrix[w][j] == -1) continue;
                 dist = current_matrix[w][j] + D[w];
 
-                if (D[j] == -1)
+                if (D[j] == -1 || D[j] > dist) {
+                    // 경로가 처음 생성되는 경우거나 완전히 다른 경로로 업데이트되는 경우
+                    // 이 경우 현재 w까지의 경로 + w에서 해당 노드까지의 경로로 바뀜
                     D[j] = dist;
-                else
-                    D[j] = D[j] > dist ? dist : D[j];
+                    update_path(path, w, j);
+                }
             }
             current_iter++;
         }
@@ -74,9 +84,31 @@ void dijkstra(biased_matrics *matrics) {
         }
         printf("\n");
 
+        for (int i = 1; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                printf("%d\t", path[i][j]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+
+        for (int i = 0; i < size; i++) {
+            free(path[i]);
+        }
+        free(path);
         free(D);
         free(S);
     }
+}
+
+void update_path(int **path, int with, int to) {
+    int *wp = path[with];
+    int *tp = path[to];
+
+    while (*wp != 0)
+        *tp++ = (*wp++ + 1);
+
+    *tp = (to + 1);
 }
 
 int in(int needle, int *haystack, int size) {
