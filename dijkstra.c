@@ -46,7 +46,9 @@ void dijkstra(biased_matrics *matrics) {
     for (int k = 0; k < matrics->matrics_count; k++) {
         size = matrics->matrics_size[k];
         current_matrix = matrics->biased_adjacent_matrics[k];
-        D = calloc(sizeof(int), size - 1);
+        D = malloc(sizeof(int) * size);
+        for (int i = 0; i < size; i++)
+            D[i] = -1;
         S = calloc(sizeof(int), size);
         w = 0;
 
