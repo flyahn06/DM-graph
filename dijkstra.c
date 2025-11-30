@@ -49,7 +49,11 @@ void dijkstra(biased_matrics *matrics) {
         D = malloc(sizeof(int) * size);
         for (int i = 0; i < size; i++)
             D[i] = -1;
-        S = calloc(sizeof(int), size);
+            
+        S = malloc(sizeof(int) * size);
+        for (int i = 0; i < size; i++) 
+            S[i] = -1;   
+
         w = 0;
 
         path = malloc(sizeof(int *) * size);
@@ -62,6 +66,7 @@ void dijkstra(biased_matrics *matrics) {
             D[i] = current_matrix[w][i];
         }
 
+        S[0] = 0;
         current_iter = 1;
         for (int i = 0; i < size - 2; i++) {
             w = min(D, size, S, current_iter);
