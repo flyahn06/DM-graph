@@ -15,7 +15,7 @@ void print_matrics(biased_matrics*);
 int min(int *, int, int*, int);
 int in(int, int*, int);
 void dijkstra(biased_matrics *);
-void update_path(int **, int, int);
+void update_path(int **, int, int, int);
 void free_all(biased_matrics *);
 
 int main() {
@@ -23,7 +23,7 @@ int main() {
 
     setbuf(stdin, 0);
     setbuf(stdout, 0);
-    read_file("input2_2.txt", &matrics);
+    read_file("test/input2_2.txt", &matrics);
     print_matrics(&matrics);
     dijkstra(&matrics);
     free_all(&matrics);
@@ -58,8 +58,15 @@ void dijkstra(biased_matrics *matrics) {
 
         path = malloc(sizeof(int *) * size);
         for (int i = 0; i < size; i++) {
-            path[i] = calloc(sizeof(int), size + 1); // null termination 고려
-            path[i][0] = 1;
+            path[i] = malloc(sizeof(int) * size);
+            for (int j = 0; j < size; j++) {
+                path[i][j] = -1;
+            }
+
+            if (current_matrix[0][i] != -1) {
+                path[i][0] = 0;
+                path[i][1] = i;
+            }
         }
 
         for (int i = 1; i < size; i++) {
@@ -82,7 +89,22 @@ void dijkstra(biased_matrics *matrics) {
                     // 경로가 처음 생성되는 경우거나 완전히 다른 경로로 업데이트되는 경우
                     // 이 경우 현재 w까지의 경로 + w에서 해당 노드까지의 경로로 바뀜
                     D[j] = dist;
-                    update_path(path, w, j);
+                    printf("update %d with %d\n", j, w);
+                    update_path(path, w, j, size);
+
+                    for (int a = 1; a < size; a++) {
+                        printf("%d\t", D[a]);
+                    }
+                    printf("\n");
+
+                    for (int a = 0; a < size; a++) {
+                        for (int b = 0; b < size; b++) {
+                            printf("%d\t", path[a][b]);
+                        }
+                        printf("\n");
+                    }
+                    printf("\n");
+
                 }
             }
             current_iter++;
@@ -110,14 +132,16 @@ void dijkstra(biased_matrics *matrics) {
     }
 }
 
-void update_path(int **path, int with, int to) {
+void update_path(int **path, int with, int to, int pathsize) {
     int *wp = path[with];
     int *tp = path[to];
 
-    while (*wp != 0)
-        *tp++ = (*wp++ + 1);
+    memset(tp, -1, sizeof(int) * pathsize);
 
-    *tp = (to + 1);
+    while (*wp != -1)
+        *tp++ = *wp++;
+
+    *tp = to;
 }
 
 int in(int needle, int *haystack, int size) {
