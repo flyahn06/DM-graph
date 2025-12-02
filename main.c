@@ -44,16 +44,20 @@ void free_all(biased_matrics *);
 
 
 int main() {
+    int graphCount = 1;  // 몇 번째 그래프인지
+    char line[1024];
+    char *ptr;
+    int u, v;
+    FILE* fp;
     biased_matrics matrics;
-    FILE* fp = fopen("test/input1_1.txt", "r");
+
+    fp = fopen("test/input1_1.txt", "r");
 
     if (fp == NULL) {  // 파일을 읽어오지 못한 경우
-        printf("파일을 열 수 없습니다: input1.txt\n");
+        printf("파일을 열 수 없습니다\n");
         return 1;
     }
 
-    int graphCount = 1;  // 몇 번째 그래프인지
-    char line[1024]; // 파일 한줄씩 읽어올 버퍼
 
     printf("1. 그래프 탐방 수행 결과\n\n");
 
@@ -67,7 +71,6 @@ int main() {
             }
         }
 
-        // 줄바꿈 문자 제거 (fscanf 후 남은 \n 처리)
         fgets(line, sizeof(line), fp);
 
         // 정점의 개수만큼 줄을 읽어서 인접 행렬 구성
@@ -76,21 +79,16 @@ int main() {
                 break; // EOF
             }
 
-            char* ptr = strtok(line, " \t\n");//구분자를 " ","\t","\n"으로해서 line중에 저것들로 구분자만남ㄴ 쪼개기
-            //그러고나면 line은[1널2 3\n널]이되어버림
-            // ptr은  저line[0]의 주소를 들고있는상태인"1"의 주소를 들고있어
-            int u = atoi(ptr); // 첫 번째 숫자는 기준 정점(문자열이니깐 정수로바꿔주기)
-            //atoi:ascii to integer
-            while ((ptr = strtok(NULL, " \t\n")) != NULL) {
-                //strtok는 첫번째 부를때는 (짜를배열,구분자들)였다면
-                //그후에(Null,구분자들)하면 아까 짜르던데서부터 이어서 짜르라는뜻입니다.
-                int v = atoi(ptr); // 그 뒤는 인접 정점들
+            // line: [기준 정점] [인접 정점]*
+            ptr = strtok(line, " \t\n");
+            u = atoi(ptr); // 기준 정점
 
+            while ((ptr = strtok(NULL, " \t\n")) != NULL) {
+                v = atoi(ptr); // 그 뒤는 인접 정점들
                 adjMatrix[u][v] = 1;
             }
         }
 
-        // 출력 호출
         printf("그래프 [%d]\n", graphCount++);
         printf("--------------------------------\n");
 
@@ -100,9 +98,9 @@ int main() {
 
         printf("\n");
 
-        // BFS 호출
+        // BFS
         printf("너비 우선 탐색\n");
-        bfs(1); // 1번 정점부터 시작
+        bfs(1);
 
         printf("================================\n\n");
     }
@@ -117,7 +115,7 @@ int main() {
 }
 
 void initQueue(Queue* q) {
-    // 매개변수로 받은 q의 front 를 -1로 초기화해줌
+    // q의 front 를 -1로 초기화함
     // 비어있다는걸로 인식하기위해
     q->front = -1;
     q->rear = -1;
@@ -131,26 +129,33 @@ int isEmpty(Queue* q) {
 // 탐색할 정점 enqueue
 void enqueue(Queue* q, int value) {
     if (q->rear == MAX_QUEUE_SIZE - 1) {
-        return; // 만약 큐 가득차있을때는 넣으면안되니깐 return해줍니다.(정점100개가 최대란ㄴ 가정하에)
+        // 큐가 가득찬 경우 넣으면 안되므로 return함
+        // (정점 100개가 최대란 가정하에)
+        return;
     }
-    if (q->front == -1) {//만약 완전 처음일때는 front 0번째에로해줘 이제 데이터가 있습니다.라는것을 알려줍니다
+    if (q->front == -1) {
+        // 초기 상태의 큐인 경우
+        // front 0의 값을 0으로 바꿔 데이터가 존재함을 표시
         q->front = 0;
     }
-    q->rear++;//한칸 뒤로옮겨서 이제 빈 새로운공간에 방문할 정점을 넣습니다.
-    q->items[q->rear] = value;//그 아이템(대기표같은)에 rear의 값의 인덱스에 방문할 예정인 정점을 넣어줍니다.
+    q->rear++;
+    q->items[q->rear] = value;
 }
 
 int dequeue(Queue* q) {
     if (isEmpty(q)) {
-        return -1;//비어있다면 비정상이라고알립니다(비어있는데 큐의 내용을 지울려고하면 안되니깐)
+        return -1; // 큐가 비어 있어 dequeue가 불가능한 경우
     }
-    int item = q->items[q->front];//선입선출이라 front안에있는것을 item에넣어줍니다(나중에 리턴해줄려고)
-    q->front++;//그리고 이제 한칸뒤로 땡겨줍니다
-    if (q->front > q->rear) { // 큐의 front가 rear를 앞지르게되면 큐에 남은 데이커가 없다는 소리니깐
-        q->front = -1;//만약 input의 그래프가 여러개일때 재사용하게하려고
-        q->rear = -1;//둘다 인덱스를 -1로해줘큐를 재사용하게 해줍니다.
+    int item = q->items[q->front]; // 선입선출이라 front가 가리키는 위치의 원소 리턴
+    q->front++;
+
+    // 큐의 front가 rear를 앞지른다면 큐에 남은 데이터가 없다는 뜻이므로
+    // 둘다 인덱스를 -1로해줘큐를 재사용하게 해줍니다.
+    if (q->front > q->rear) {
+        q->front = -1;
+        q->rear = -1;
     }
-    return item;//dequeue할떄 결국 이제 방문한거니깐 출력해야해서 item반환
+    return item;
 }
 
 // 깊이 우선 탐색 (DFS) 재귀 함수 부분
@@ -169,6 +174,7 @@ void dfs_recursive(int node, int start) {
         }
     }
 }
+
 // DFS 전체 실행 함수 (시작 시 visited 배열 초기화)
 void dfs(int startNode) {
     // 방문 배열 초기화
@@ -183,12 +189,12 @@ void dfs(int startNode) {
     printf("\n");
 }
 
-// 정진영-너비 우선 탐색 (BFS) 함수
+// 너비 우선 탐색 (BFS) 함수
 void bfs(int startNode) {
-    Queue q;  // q는 스택메모리에 생성되고(스택,큐할때 스택아님)
-    initQueue(&q);  // 함수들은 다 반영되어야하니깐 포인터 연산자로 넘겨주기
-    // q초기화해주기 새로시작할거니깐
-    //
+    Queue q;
+    initQueue(&q);
+
+
     // 1. 방문 배열 초기화 (0: 방문안함)
     for (int i = 1;  // 0이아니라 1인이유 맨위에서 말했듯이 점점=인덱스해서 방문한정점 보게할려고
         i <= numVertices; i++) {
@@ -196,7 +202,6 @@ void bfs(int startNode) {
         }
 
     // 2. 시작 정점 처리
-
     enqueue(&q, startNode);  // 1 넣음으로써 시작
     visited[startNode] = 1;  // 1이면 방문한것
     printf("%d", startNode);  // 첫 정점 출력
@@ -211,12 +216,12 @@ void bfs(int startNode) {
             // 현재 정점과연결되어 있고(adjMatrix==1), 아직 방문하지 않았다면(visted==0)
             if (adjMatrix[current][i] == 1 && visited[i] == 0) {
                 visited[i] = 1;       // 방문 처리
-                printf(" - %d", i);   // 출력 형식 맞춰 프린트
-                enqueue(&q, i);       // 큐에 삽입(나중에 이정점가서 이정점이랑 연결된것도 찾아야하니깐 )
+                printf(" - %d", i);
+                enqueue(&q, i);       // 큐에 삽입 (나중에 이정점가서 이정점이랑 연결된것도 찾아야하니깐 )
             }
         }
     }
-    printf("\n"); // 줄바꿈
+    printf("\n");
 }
 
 void dijkstra(biased_matrics *matrics) {
@@ -247,7 +252,7 @@ void dijkstra(biased_matrics *matrics) {
 
         // 결과 배열
         D = malloc(sizeof(int) * size);
-        for (int i = 1; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             D[i] = current_matrix[w][i];
         }
 
