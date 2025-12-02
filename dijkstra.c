@@ -11,12 +11,14 @@ typedef struct {
 
 int **allocate_matrix(int);
 void read_file(const char *, biased_matrics *);
-void print_matrics(biased_matrics*);
 int min(int *, int, int*, int);
 int in(int, int*, int);
 void dijkstra(biased_matrics *);
 void update_path(int **, int, int, int);
 void free_all(biased_matrics *);
+#ifdef DEBUG
+void print_matrics(biased_matrics*);
+#endif
 
 int main() {
     biased_matrics matrics;
@@ -24,7 +26,9 @@ int main() {
     setbuf(stdin, 0);
     setbuf(stdout, 0);
     read_file("test/input2_2.txt", &matrics);
+#ifdef DEBUG
     print_matrics(&matrics);
+#endif
     dijkstra(&matrics);
     free_all(&matrics);
 
@@ -40,10 +44,17 @@ void dijkstra(biased_matrics *matrics) {
     int current_iter;
     int dist;
     int **path;
+    int *pp;
 
     if (matrics->matrics_count == 0) return;
 
+    printf("\n2. 최단 경로 구하기 수행 결과\n\n");
+
     for (int k = 0; k < matrics->matrics_count; k++) {
+        printf("그래프 [%d]\n", k + 1);
+        printf("----------------------------\n");
+        printf("시작점: 1\n");
+
         size = matrics->matrics_size[k];
         current_matrix = matrics->biased_adjacent_matrics[k];
         D = malloc(sizeof(int) * size);
@@ -89,9 +100,12 @@ void dijkstra(biased_matrics *matrics) {
                     // 경로가 처음 생성되는 경우거나 완전히 다른 경로로 업데이트되는 경우
                     // 이 경우 현재 w까지의 경로 + w에서 해당 노드까지의 경로로 바뀜
                     D[j] = dist;
+#ifdef DEBUG
                     printf("update %d with %d\n", j, w);
+#endif
                     update_path(path, w, j, size);
 
+#ifdef DEBUG
                     for (int a = 1; a < size; a++) {
                         printf("%d\t", D[a]);
                     }
@@ -104,6 +118,7 @@ void dijkstra(biased_matrics *matrics) {
                         printf("\n");
                     }
                     printf("\n");
+#endif
 
                 }
             }
@@ -111,17 +126,14 @@ void dijkstra(biased_matrics *matrics) {
         }
 
         for (int i = 1; i < size; i++) {
-            printf("%d\t", D[i]);
-        }
-        printf("\n");
-
-        for (int i = 1; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                printf("%d\t", path[i][j]);
+            pp = path[i];
+            printf("정점 [%d]: %d", i + 1, (*pp++) + 1);
+            while (*pp != -1) {
+                printf(" - %d", (*pp++) + 1);
             }
-            printf("\n");
+            printf(", 길이: %d\n", D[i]);
         }
-        printf("\n");
+        printf("============================\n\n");
 
         for (int i = 0; i < size; i++) {
             free(path[i]);
@@ -169,7 +181,7 @@ int min(int *target, int size, int *without, int without_size) {
     return min_index;
 }
 
-
+# ifdef DEBUG
 void print_matrics(biased_matrics *result) {
     for (int i = 0; i < result->matrics_count; i++) {
         for (int j = 0; j < result->matrics_size[i]; j++) {
@@ -181,6 +193,7 @@ void print_matrics(biased_matrics *result) {
         printf("\n");
     }
 }
+# endif
 
 int **allocate_matrix(int n) {
     int **result = malloc(n * sizeof(int *));
