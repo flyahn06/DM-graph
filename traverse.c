@@ -66,8 +66,8 @@ void dfs_recursive(int node) {
     for (int i = 1; i <= numVertices; i++) {
 		// adjMatrix[node][i] == 1 : 연겨됨
 		// visited[i] == 0 : 아직 방문 x
-        if (adjMartx[nodde][i] == 1 && visited[i] == 0) {
-            dfs_recursivre(i); // 재귀 DFS
+        if (adjMatrix[node][i] == 1 && visited[i] == 0) {
+            dfs_recursive(i); // 재귀 DFS
         }
     }
 }
@@ -122,7 +122,7 @@ void bfs(int startNode) {//시작노드를 매개변수로줍니다 사실 그�
 }
 
 int main() {
-    FILE* fp = fopen("input1_2.txt", "r");//읽기모드로 파일읽어오기
+    FILE* fp = fopen("test/input1_2.txt", "r");//읽기모드로 파일읽어오기
     //여기서
     //input1_1하면 그래프가 한개인경우로 테스트할수있고
     //input1_2로하면 그래프가 여러개인경우로 테스트할수있습니다.
