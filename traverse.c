@@ -59,15 +59,18 @@ int dequeue(Queue* q) {
     return item;//dequeue할떄 결국 이제 방문한거니깐 출력해야해서 item반환
 }
 //깊이 우선 탐색 (DFS) 재귀 함수 부분
-void dfs_recursive(int node) {
+void dfs_recursive(int node, int start) {
     visited[node] = 1; // 현재 노드를 반문했다고 표시 ( 1 = 방문함)
-    printf("%d", node); //현재 방문한 정점을 출력
+    if (start)
+        printf("%d", node); //현재 방문한 정점을 출력
+    else
+        printf(" - %d", node);
     //현재 노드와 연결된 정점들을 1부터 차례대로 확인
     for (int i = 1; i <= numVertices; i++) {
 		// adjMatrix[node][i] == 1 : 연겨됨
 		// visited[i] == 0 : 아직 방문 x
         if (adjMatrix[node][i] == 1 && visited[i] == 0) {
-            dfs_recursive(i); // 재귀 DFS
+            dfs_recursive(i, 0); // 재귀 DFS
         }
     }
 }
@@ -80,7 +83,7 @@ void dfs(int startNode) {
         visited[i] = 0;
     // 재귀 DFC 시작 
     // startNode(보통 1번)에서 탐색을 시작함
-    dfs_recursive(startNode);
+    dfs_recursive(startNode, 1);
     // 3. 줄바꿈 (출력 마무리)
     printf("\n");
 }
@@ -122,12 +125,10 @@ void bfs(int startNode) {//시작노드를 매개변수로줍니다 사실 그�
 }
 
 int main() {
-    FILE* fp = fopen("test/input1_2.txt", "r");//읽기모드로 파일읽어오기
+    FILE* fp = fopen("test/input1_1.txt", "r");//읽기모드로 파일읽어오기
     //여기서
     //input1_1하면 그래프가 한개인경우로 테스트할수있고
     //input1_2로하면 그래프가 여러개인경우로 테스트할수있습니다.
-
-
 
     if (fp == NULL) {//정상종료를ㄹ위해
         printf("파일을 열 수 없습니다: input1.txt\n");
@@ -136,6 +137,8 @@ int main() {
 
     int graphCount = 1;//출력할때 []안의 수
     char line[1024];//파일 한줄씩읽어올 버퍼
+
+    printf("1. 그래프 탐방 수행 결과\n\n");
 
     // 파일에서 정점 개수를 읽어옴 (더 이상 읽을 게 없으면 종료)
     while (fscanf(fp, "%d", &numVertices) != EOF) {
