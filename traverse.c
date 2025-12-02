@@ -58,6 +58,32 @@ int dequeue(Queue* q) {
     }
     return item;//dequeue할떄 결국 이제 방문한거니깐 출력해야해서 item반환
 }
+//깊이 우선 탐색 (DFS) 재귀 함수 부분
+void dfs_recursive(int node) {
+    visited[node] = 1; // 현재 노드를 반문했다고 표시 ( 1 = 방문함)
+    printf("%d", node); //현재 방문한 정점을 출력
+    //현재 노드와 연결된 정점들을 1부터 차례대로 확인
+    for (int i = 1; i <= numVertices; i++) {
+		// adjMatrix[node][i] == 1 : 연겨됨
+		// visited[i] == 0 : 아직 방문 x
+        if (adjMartx[nodde][i] == 1 && visited[i] == 0) {
+            dfs_recursivre(i); // 재귀 DFS
+        }
+    }
+}
+// DFS 전체 실행 함수 (시작 시 visited 배열 초기화)
+void dfs(int startNode) {
+	// 방문 배열 초기화
+    // 0 = 방문하지 않은 상테
+    // 이전 그래프 방문 혼작이 남아있지 않도록 완전히 초기화
+    for (int i = 1; i <= numVertices; i++)
+        visited[i] = 0;
+    // 재귀 DFC 시작 
+    // startNode(보통 1번)에서 탐색을 시작함
+    dfs_recursive(startNode);
+    // 3. 줄바꿈 (출력 마무리)
+    printf("\n");
+}
 
 // 정진영-너비 우선 탐색 (BFS) 함수
 void bfs(int startNode) {//시작노드를 매개변수로줍니다 사실 그냥 1임
@@ -146,12 +172,13 @@ int main() {
             }
         }
 
-        // 출력 
+        // 출력 호출
         printf("그래프 [%d]\n", graphCount++);
         printf("--------------------------------\n");
 
-        //게렐토야씨가 해줄 깊이우선탐색
+        // DFS 
         printf("깊이 우선 탐색\n");
+        dfs(1); 
 
         printf("\n");
 
