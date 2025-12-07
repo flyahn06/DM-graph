@@ -16,8 +16,8 @@ typedef struct {
 typedef struct {
     int matrics_count;  // 파일로부터 읽은 행렬 개수
     int *matrics_size;  // 읽어들인 행렬들의 크기
-    int ***biased_adjacent_matrics;  // 실제 가중인접행렬들의 배열
-} biased_matrics;
+    int ***weighted_adjacent_matrics;  // 실제 가중인접행렬들의 배열
+} weighted_matrics;
 
 // traverse.c
 void initQueue(Queue *);
@@ -34,12 +34,12 @@ int numVertices;
 
 // dijkstra.c
 int **allocate_matrix(int);
-void read_file(const char *, biased_matrics *);
+void read_file(const char *, weighted_matrics *);
 int min(int *, int, int*, int);
 int in(int, int*, int);
-void dijkstra(biased_matrics *);
+void dijkstra(weighted_matrics *);
 void update_path(int **, int, int, int);
-void free_all(biased_matrics *);
+void free_all(weighted_matrics *);
 
 
 int main() {
@@ -48,9 +48,9 @@ int main() {
     char *ptr;
     int u, v;
     FILE* fp;
-    biased_matrics matrics;
+    weighted_matrics matrics;
 
-    fp = fopen("test/input1_1.txt", "r");
+    fp = fopen("input1.txt", "r");
 
     if (fp == NULL) {  // 파일을 읽어오지 못한 경우
         printf("파일을 열 수 없습니다\n");
@@ -106,7 +106,7 @@ int main() {
 
     fclose(fp);
 
-    read_file("test/input2_1.txt", &matrics);
+    read_file("input2.txt", &matrics);
     dijkstra(&matrics);
     free_all(&matrics);
 
@@ -223,7 +223,7 @@ void bfs(int startNode) {
     printf("\n");
 }
 
-void dijkstra(biased_matrics *matrics) {
+void dijkstra(weighted_matrics *matrics) {
     int **current_matrix;
     int current_iter;
     int **path;
@@ -244,7 +244,7 @@ void dijkstra(biased_matrics *matrics) {
         printf("시작점: 1\n");
 
         size = matrics->matrics_size[k];
-        current_matrix = matrics->biased_adjacent_matrics[k];
+        current_matrix = matrics->weighted_adjacent_matrics[k];
 
         // 시작 노드
         w = 0;
@@ -374,8 +374,8 @@ int **allocate_matrix(int n) {
     return result;
 }
 
-void read_file(const char* filename, biased_matrics *result) {
-    int target_node, current_node, bias;
+void read_file(const char* filename, weighted_matrics *result) {
+    int target_node, current_node, weight;
     char *line = malloc(0x200);
     int **adjacent_matrix;
     int total_matrics = 0;
@@ -383,7 +383,7 @@ void read_file(const char* filename, biased_matrics *result) {
     FILE *fp;
     int n;
 
-    result->biased_adjacent_matrics = calloc(1, sizeof(int **));
+    result->weighted_adjacent_matrics = calloc(1, sizeof(int **));
     result->matrics_size = calloc(1, sizeof(int));
 
     fp = fopen(filename, "r");
@@ -402,17 +402,17 @@ void read_file(const char* filename, biased_matrics *result) {
             while (token != NULL) {
                 target_node = atoi(token) - 1;
                 token = strtok(NULL, " ");
-                bias = atoi(token);
+                weight = atoi(token);
                 token = strtok(NULL, " ");
 
-                adjacent_matrix[current_node][target_node] = bias;
+                adjacent_matrix[current_node][target_node] = weight;
             }
         }
 
         // 하나 늘려 할당
-        result->biased_adjacent_matrics = realloc(result->biased_adjacent_matrics, sizeof(int **) * (total_matrics + 1));
+        result->weighted_adjacent_matrics = realloc(result->weighted_adjacent_matrics, sizeof(int **) * (total_matrics + 1));
         result->matrics_size = realloc(result->matrics_size, sizeof(int) * (total_matrics + 1));
-        result->biased_adjacent_matrics[total_matrics] = adjacent_matrix;
+        result->weighted_adjacent_matrics[total_matrics] = adjacent_matrix;
         result->matrics_size[total_matrics] = n;
         total_matrics++;
     }
@@ -424,16 +424,16 @@ void read_file(const char* filename, biased_matrics *result) {
     free(line);
 }
 
-void free_all(biased_matrics *m) {
+void free_all(weighted_matrics *m) {
     for (int k = 0; k < m->matrics_count; k++) {
         int size = m->matrics_size[k];
-        int **mat = m->biased_adjacent_matrics[k];
+        int **mat = m->weighted_adjacent_matrics[k];
 
         for (int i = 0; i < size; i++)
             free(mat[i]);
 
         free(mat);
     }
-    free(m->biased_adjacent_matrics);
+    free(m->weighted_adjacent_matrics);
     free(m->matrics_size);
 }
