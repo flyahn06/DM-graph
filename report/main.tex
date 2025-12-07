@@ -1,0 +1,669 @@
+\documentclass[10pt,a4paper]{article}
+
+% ★ geometry 수정
+\usepackage[
+  a4paper,
+  top=2cm,
+  bottom=2.5cm,
+  left=2.2cm,
+  right=2.2cm,
+  includehead,      % 머리말 영역을 페이지 높이에 포함
+  includefoot       % 꼬리말 영역도 포함
+]{geometry}
+\usepackage{graphicx}
+\usepackage{kotex}
+\usepackage{amsmath, amsfonts}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\rightmark}
+\fancyfoot[C]{\thepage}
+
+% ★ 헤더 높이 여유를 반드시 줍니다.
+\setlength{\headheight}{15pt}
+\usepackage{placeins}
+\usepackage{listings}
+
+\lstdefinestyle{pretty}{
+  backgroundcolor=\color{gray!5},
+  basicstyle=\ttfamily\footnotesize,
+  frame=single,
+  framerule=0.5pt,
+  rulecolor=\color{black!30},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{orange!90!black},
+  commentstyle=\color{gray!70},
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=4,
+  captionpos=b
+}
+\lstset{style=pretty}
+
+\usepackage{minted}
+\usemintedstyle{friendly}
+
+\setminted{
+  style=friendly,
+  bgcolor=gray!5,
+  frame=single,
+  rulecolor=\color{black!30},
+  linenos=true,
+  numbersep=6pt,
+  breaklines=true,
+  autogobble=true,
+  fontsize=\footnotesize,
+  tabsize=4,
+  framesep=4pt,
+  xleftmargin=0pt,
+  xrightmargin=0pt
+}
+
+\renewcommand{\arraystretch}{1.3}
+
+\graphicspath{{img/}}
+\setmainfont{NanumGothic}
+\setmonofont{D2Coding}
+
+\renewcommand{\thesubsection}{(\alph{subsection})}
+
+\title{이산수학 8조 보고서}
+\author{202513233 안동기, 202411376 정진영, 202110415 추민규, 202413757 게렐토야}
+
+
+\usepackage{setspace}
+\onehalfspacing 
+\usepackage[font=small, labelfont=bf]{caption}
+
+\begin{document}
+\maketitle
+
+\section{문제 정의}
+
+\subsection{목표}
+
+주어진 그래프에 대해, 다음을 수행한다.
+
+\begin{enumerate}
+    \item BFS
+    \item DFS
+    \item 첫 번째 노드로부터 다른 모든 노드까지의 최단거리 출력
+    \item 첫 번째 노드로부터 다른 모든 노드까지의 최단경로 출력
+\end{enumerate}
+
+\subsection{입력}
+
+\subsection{가중치 없는 단순 연결 방향 그래프}
+
+\begin{itemize}
+    \item 첫 번째 줄에는 노드의 수가 주어진다.
+    \item 다음 줄의 첫 번째에는 노드의 번호가 주어지고, 다음부터 인접한 정점들이 주어진다.
+    \item 한 파일에는 여러 개의 그래프가 존재할 수 있다.
+\end{itemize}
+
+
+\subsection{가중치 있는 단순 연결 방향 그래프}
+
+\begin{itemize}
+    \item 첫 번째 줄에는 노드의 수가 주어진다.
+    \item 다음 줄의 첫 번째에는 노드의 번호가 주어지고, 다음부터 [인접한 정점, 가중치]들이 주어진다.
+    \item 한 파일에는 여러 개의 그래프가 존재할 수 있다.
+\end{itemize}
+
+\subsection{출력}
+
+주어진 그래프에 대한 BFS 결과, DFS 결과, 다익스트라 결과를 조건에 맞게 출력한다.
+
+\subsection{제약 조건}
+
+\begin{enumerate}
+    \item 주어진 그래프는 연결 그래프이다. (즉, 한 정점으로부터 다른 정점까지 경로가 존재함이 보장된다)
+    \item 주어진 그래프의 최대 노드 수는 100개이다.
+\end{enumerate}
+
+\section{시스템 환경 및 사용 언어}
+
+사용 언어: C언어
+
+\noindent 사용 시스템: 
+\begin{itemize}
+    \item Ubuntu 24.04.3 LTS on WSL (GCC 13.0.0)
+    \item Visual Studio 2022 on Windows 11
+\end{itemize}
+
+\section{그래프 표현 기법}
+
+\subsection{그래프 탐방 알고리즘에서의 표현 방법}
+
+이번 프로젝트는 인접 행렬을 사용하여 그래프를 구현하는 것이 기본 요구사항이었기 때문에, 전역 변수로 선언된 \texttt{adjMatrix}라는 2차원 배열을 통해 그래프를 표현했다. 
+문제 조건에서 그래프당 정점의 최대 개수가 100개라고 주어졌기 때문에, 정점 번호인 1번부터 100번을 배열 인덱스로 그대로 매핑하여 직관적으로 사용하기 위해 상수를 101로 정의하고 배열 크기를 할당했다.
+
+구현 과정에서는 그래프의 방향성을 반영했다. 입력 파일에서 기준 정점 u와 연결된 인접 정점 \texttt{v}를 읽어 들였을 때, 
+\texttt{adjMatrix[u][v]}의 값을 1로 설정하여 \texttt{u}에서 \texttt{v}로 가는 단방향 경로가 있음을 표시했다. 반대로 경로가 없는 부분은 초기화된 0 값을 그대로 유지함으로써, 
+가중치 없이 방향성만 존재하는 Unbiased Graph의 연결 관계를 인접 행렬에 그대로 옮겨 구현했다.
+
+예를 들어, 과제 설명 파일에서 ex1으로 제시된 예시 파일은 다음과 같은 인접행렬로 표현된다.
+
+\begin{lstlisting}
+    0 1 1 0 0 0 0 0
+    1 0 0 1 1 0 0 0
+    1 0 0 0 0 1 1 0
+    0 1 0 0 0 0 0 1
+    0 1 0 0 0 0 0 1
+    0 0 1 0 0 0 0 1
+    0 0 1 0 0 0 0 1
+    0 0 0 1 1 1 1 0
+\end{lstlisting}
+
+\subsection{다익스트라 알고리즘에서의 표현 방법}
+
+기본적으로 unbiased graph와 비슷하게 인접 행렬을 통해 그래프를 표현하지만, 여기서는 가중치를 기록해야 하기 때문에 경로가 있으면 1 대신 해당 edge의 가중치를 기록해 표현했다. 
+
+여기서 중요한 것은 자기 자신까지의 거리는 항상 0이기 때문에, 경로가 없다는 것을 0으로 표현할 수 없다는 것이다. 
+따라서 경로가 없는 경우 0 대신 -1로 표현되도록 했다. 예를 들어, 프로젝트에서 ex3으로 제시한 파일은 다음과 같은 인접 행렬로 표현된다. 
+앞서 언급했듯 자기 자신까지의 거리는 0이기 때문에 주대각 성분이 모두 0이다.
+
+\begin{lstlisting}
+    0 10 -1 30 100 
+    -1 0 50 -1 -1 
+    -1 -1 0 -1 10 
+    -1 -1 20 0 60 
+    -1 -1 -1 -1 0 
+\end{lstlisting}
+
+
+\section{주요 변수 및 함수}
+
+\subsection{주요 변수}
+
+\paragraph{\texttt{struct Queue}}
+
+\begin{minted}{c}
+// 큐(Queue) 구조체 및 함수 (BFS용)
+typedef struct {
+    int items[MAX_QUEUE_SIZE];  // 데이터 저장할배열
+    int front;  // 큐의 맨앞의 인덱스를 가리키는 변수(출구)
+    int rear;  // 큐의 맨뒤의 인덱스를 가리키는 변수(입구)
+} Queue;
+\end{minted}
+
+이 코드는 너비 우선 탐색(BFS) 알고리즘을 수행하기 위해 필수적인 자료구조인 '큐(Queue)'를 정의하는 부분이다. 
+BFS는 정점들을 방문한 순서대로 저장했다가 가장 먼저 저장된 정점부터 다시 꺼내어 탐색을 이어가는 선입선출(FIFO) 방식이기 때문에 이를 관리할 구조체가 필요하다.
+이를 위해 \texttt{struct}를 사용하여 \texttt{Queue}라는 새로운 자료형을 정의했다. 구조체 내부에는 방문할 정점의 번호들을 실질적으로 저장하는 \texttt{items}라는 배열을 두었고, 
+큐의 데이터 관리를 위해 현재 데이터가 나가는 위치인 \texttt{front}(출구)와 데이터가 들어오는 위치인 \texttt{rear}(입구)라는 두 개의 인덱스 변수를 함께 선언하여 
+큐의 상태를 제어할 수 있도록 설계했다.
+
+\paragraph{\texttt{struct biased\_matrics}}
+
+\begin{minted}{c}
+typedef struct {
+   int matrics_count;  // 파일로부터 읽은 행렬 개수
+   int *matrics_size;  // 읽어들인 행렬들의 크기
+   int ***biased_adjacent_matrics;  // 실제 가중인접행렬들의 배열
+} biased_matrics;
+\end{minted}
+
+이 구조체는 파일로부터 생성한 인접 행렬들을 담고 있는 구조체이다. \texttt{matrics\_count} 필드에는 파일에서 읽어들인 그래프의 총 개수가 들어가며, 
+\texttt{matrics\_size}는 읽어들인 인접 행렬들의 크기를 담고 있다. \texttt{biased\_adjacent\_matrics}는 실제 가중 인접 행렬을 담고 있는 배열이다. 
+각각의 슬롯은 \texttt{int}형의 2차원 배열(\texttt{int **})을 담고 있기 때문에 삼중 포인터로 선언해뒀다. 
+
+
+\subsection{주요 함수}
+
+\subsubsection{그래프 탐방}
+
+\paragraph{\texttt{initQueue()}} 큐의 입구와 출구를 가리키는 \texttt{front}와 \texttt{rear} 변수를 -1로 설정하여 큐를 초기화한다.
+\begin{minted}{c}
+void initQueue(Queue* q) {
+    // q의 front 를 -1로 초기화함
+    // 비어있다는걸로 인식하기위해
+    q->front = -1;
+    q->rear = -1;
+}    
+\end{minted}
+
+\paragraph{\texttt{isEmpty()}} 현재 \texttt{front} 값이 -1인지를 확인하여 큐가 비어있는 상태인지 판별한다.
+\begin{minted}{c}
+// 큐가 비어있는지 체크해주는 함수
+int isEmpty(Queue* q) {
+    return q->front == -1;
+}
+\end{minted}
+
+
+\paragraph{\texttt{enqueue()}} 데이터를 삽입하는 함수이다. 먼저 큐가 가득 찼는지 확인한 후, \texttt{rear} 인덱스를 증가시키며 \texttt{items} 배열에 새로운 데이터를 저장한다. 
+이때 큐가 비어있던 초기 상태라면 \texttt{front} 값을 0으로 설정하여 데이터가 존재함을 표시한다.
+\begin{minted}{c}
+// 탐색할 정점 enqueue
+void enqueue(Queue* q, int value) {
+    if (q->rear == MAX_QUEUE_SIZE - 1) {
+        // 큐가 가득찬 경우 넣으면 안되므로 return함
+        // (정점 100개가 최대란 가정하에)
+        return;
+    }
+    if (q->front == -1) {
+        // 초기 상태의 큐인 경우
+        // front 0의 값을 0으로 바꿔 데이터가 존재함을 표시
+        q->front = 0;
+    }
+    q->rear++;
+    q->items[q->rear] = value;
+}
+\end{minted}
+
+
+\paragraph{\texttt{dequeue()}} 데이터를 추출하는 함수이다. \texttt{front} 인덱스가 가리키는 위치의 데이터를 반환하고 \texttt{front}를 증가시켜 다음 데이터를 가리키게 한다. 
+만약 데이터를 모두 꺼내어 \texttt{front}가 \texttt{rear}보다 커지게 되면, 큐가 다시 빈 상태가 되므로 두 인덱스를 -1로 재설정하여 큐를 효율적으로 재사용할 수 있도록 구현했다.
+\begin{minted}{c}
+int dequeue(Queue* q) {
+    if (isEmpty(q)) {
+        return -1; // 큐가 비어 있어 dequeue가 불가능한 경우
+    }
+    int item = q->items[q->front]; // 선입선출이라 front가 가리키는 위치의 원소 리턴
+    q->front++;
+
+    // 큐의 front가 rear를 앞지른다면 큐에 남은 데이터가 없다는 뜻이므로
+    // 둘다 인덱스를 -1로해줘 큐를 재사용하게 해줍니다.
+    if (q->front > q->rear) {
+        q->front = -1;
+        q->rear = -1;
+    }
+    return item;
+}
+\end{minted}
+
+\paragraph{\texttt{bfs()}} \texttt{bfs()} 함수는 큐 자료구조를 활용하여 너비 우선 탐색을 수행하는 로직을 담고 있다. 
+함수가 실행되면 가장 먼저 \texttt{visited} 배열을 초기화하는 작업을 수행한다. 이는 프로그램이 여러 그래프를 연속으로 처리할 때, 
+앞서 수행된 DFS나 이전 그래프의 탐색 흔적이 남아있으면 오류가 발생할 수 있기 때문이다. 
+따라서 for 반복문을 통해 1번 정점부터 마지막 정점까지의 방문 기록을 모두 0으로 리셋하여 완전히 새로운 탐색을 준비한다.
+
+초기화가 완료되면 탐색의 시작점인 \texttt{startNode}를 큐에 넣고 방문 배열에 1을 기록하여 첫 방문을 확정한다. 
+이후의 탐색 과정은 큐가 텅 빌 때까지 \texttt{while} 반복문을 통해 계속된다. 큐에 데이터가 남아있다는 것은 아직 방문해서 확인해야 할 정점이 있다는 뜻이므로, 
+\texttt{dequeue()} 함수를 호출하여 대기열의 맨 앞에 있는 정점을 꺼내 현재 탐색의 기준점인 \texttt{current} 변수에 저장한다.
+
+그다음 단계로 \texttt{current} 정점과 연결된 이웃 정점들을 찾기 위해 1번 정점부터 마지막 정점까지 \texttt{for} 반복문을 수행하여 순차적으로 탐색한다.
+
+반복문 내부의 \texttt{if} 조건문에서는 인접 행렬 \texttt{adjMatrix} 값이 1인지 확인하여 연결 여부를 판단하고, 동시에 \texttt{visited} 배열이 0인지 확인하여 중복 방문을 방지한다.
+이 두 조건을 모두 만족하는 새로운 정점을 발견하면 방문 처리를 하고 화면에 경로를 출력한다. 그리고 마지막으로 해당 정점을 \texttt{enqueue()} 함수를 통해 큐에 삽입한다. 
+지금 당장은 방문 체크만 했지만, 큐에 넣어두어야 나중에 순서가 되었을 때 그 정점을 기준으로 다시 연결된 또 다른 이웃들을 찾아나갈 수 있기 때문이다.
+
+\begin{minted}{c}
+// 너비 우선 탐색 (BFS) 함수
+void bfs(int startNode) {
+    Queue q;
+    initQueue(&q);
+
+
+    // 1. 방문 배열 초기화 (0: 방문안함)
+    for (int i = 1;  // 0이아니라 1인이유 맨위에서 말했듯이 점점=인덱스해서 방문한정점 보게할려고
+        i <= numVertices; i++) {
+        visited[i] = 0;  // 그리고 이전그래프에서 1로 막 되어있으니깐 0으로 다시 다 초기화
+        }
+
+    // 2. 시작 정점 처리
+    enqueue(&q, startNode);  // 1 넣음으로써 시작
+    visited[startNode] = 1;  // 1이면 방문한것
+    printf("%d", startNode);  // 첫 정점 출력
+
+    // 3. 큐가 빌 때까지 반복
+    while (!isEmpty(&q)) {
+        int current = dequeue(&q);  // 맨앞에있는걸 빼고 그게 지금 현재정점으로 넣어줌
+
+        // 현재 정점(current)과 연결된 모든 정점(i)을 확인
+        // 인접 행렬을 1부터 N까지 순회하므로 자동으로 오름차순 방문이 됨
+        for (int i = 1; i <= numVertices; i++) {
+            // 현재 정점과연결되어 있고(adjMatrix==1), 아직 방문하지 않았다면(visted==0)
+            if (adjMatrix[current][i] == 1 && visited[i] == 0) {
+                visited[i] = 1;       // 방문 처리
+                printf(" - %d", i);
+                enqueue(&q, i);       // 큐에 삽입 (나중에 이정점가서 이정점이랑 연결된것도 찾아야하니깐 )
+            }
+        }
+    }
+    printf("\n");
+}
+\end{minted}
+
+\paragraph{\texttt{dfs()}}
+
+\texttt{dfs()} 함수는 깊이 우선 탐색을 수행하는 알고리즘이다. 
+이 구현에서는 스택을 직접 사용하지 않고, 재귀 호출(recursion)을 통해 동일한 동작을 수행한다. 
+재귀 호출의 콜 스택이 스택 자료구조와 동일한 역할을 하므로, dfs 구조를 자연스럽게 표현할 수 있다. 
+
+함수가 실행되면 가장 먼저 \texttt{visited} 배열을 초기화하는 작업을 수행한다. 
+dfs 는 한 번 방문한 정점을 다시 방문하지 않는다는 원칙을 갖고 있으므로 이전 그래프 탐색이나 dfs의 방문 기록이 남아 있으면 잘못된 경로로 이동하거나 무한 재귀에 빠질 위험이 있다. 
+따라서 for 반복문을 통해 모든 정점을 0 으로 설정하여 완전히 새로운 탐색 상태를 만든다. 초기화가 끝나면 \texttt{dfs\_recursive(StartNode)}를 호출하여 실제 DFS 탐색이 시작된다. 
+이 재귀 함수는 현재 정점을 방문 처리하고 출력한 뒤, 그 정점과 연결된 이웃들을 찾기 위해 1번 정점부터 마지막 정점까지 반복문을 돌린다. 
+
+반목문 내부에서는 두 가지 조건을 검사한다.
+
+\begin{enumerate}
+    \item \texttt{adjMatrix[node][i] == 1}: 현재 정점과 \texttt{i} 정점이 인접해 있는 확인한다
+    \item \texttt{visited[i] == 0}: 아직 방문하지 않은 정점인지 확인한다
+\end{enumerate}
+
+이 두 조건을 모두 만족하는 정점을 발견하면, \texttt{dfs\_recursive(i)} 를 다시 호출하여 해당 정점을 기준으로 더 깊은 곳으로 계속 파고들게 된다. 
+이렇게 하면 dfs 의 핵심 특징인 "갈 수 있는 거장 깊은 정점까지 내려갔다가 더 이상 내려갈 곳 없을 때 부모 정점으로 되돌아오는 동작"이 자연스럽게 구현된다.
+
+\begin{minted}{c}
+// 깊이 우선 탐색 (DFS) 재귀 함수 부분
+void dfs_recursive(int node, int start) {
+    visited[node] = 1; // 현재 노드를 반문했다고 표시 (1 = 방문함)
+    if (start)
+        printf("%d", node); // 현재 방문한 정점을 출력
+    else
+        printf(" - %d", node);
+    // 현재 노드와 연결된 정점들을 1부터 차례대로 확인
+    for (int i = 1; i <= numVertices; i++) {
+        // adjMatrix[node][i] == 1 : 연결됨
+        // visited[i] == 0 : 아직 방문 x
+        if (adjMatrix[node][i] == 1 && visited[i] == 0) {
+            dfs_recursive(i, 0); // 재귀 DFS
+        }
+    }
+}
+
+// DFS 전체 실행 함수 (시작 시 visited 배열 초기화)
+void dfs(int startNode) {
+    // 방문 배열 초기화
+    // 0 = 방문하지 않은 상테
+    // 이전 그래프 방문 혼작이 남아있지 않도록 완전히 초기화
+    for (int i = 1; i <= numVertices; i++)
+        visited[i] = 0;
+    // 재귀 DFC 시작
+    // startNode(보통 1번)에서 탐색을 시작함
+    dfs_recursive(startNode, 1);
+    // 3. 줄바꿈 (출력 마무리)
+    printf("\n");
+}    
+\end{minted}
+
+\subsubsection{다익스트라}
+
+\paragraph{\texttt{dijkstra()}}
+
+이 함수는 다익스트라 알고리즘을 통해 시작 노드부터 모든 노드까지의 최단 경로를 찾아낸다. 우선 다음과 같이 \texttt{D}와 \texttt{S}를 초기화한다. 
+여기서 \texttt{D}는 거리를 담는 배열이며, \texttt{S}는 이미 탐색한 노드들이 들어가는 배열이다. 이때 \texttt{S}에서 빈 공간임을 나타내기 위해서 위에서처럼 -1을 사용했다.
+
+첫 번째 반복에서 \texttt{w}는 시작 노드인 0이기 때문에, 다음과 같이 간단한 반복문을 통해 \texttt{D}를 인접 행렬의 0번째 행으로 초기화했다.
+
+\begin{minted}{c}
+// 시작 노드
+w = 0;
+
+// 결과 배열
+D = malloc(sizeof(int) * size);
+for (int i = 0; i < size; i++) {
+   D[i] = current_matrix[w][i];
+}
+
+S = malloc(sizeof(int) * size);
+S[0] = 0;  // 시작 노드는 포함되어야 함
+for (int i = 1; i < size; i++)
+   S[i] = -1;  // 비어 있는 공간이라는 표시로 -1을 사용함
+\end{minted}
+
+다음으로 해당 노드까지의 최단 경로를 담을 \texttt{path} 배열을 초기화했다. 프로젝트 조건으로부터 주어진 그래프는 연결 그래프이기 때문에, 한 노드에서 임의의 노드까지 경로는 항상 존재한다.
+이때 최단 경로가 가지고 있는 최대 노드 개수는 현재 그래프의 노드의 개수이기 때문에, 인접 행렬과 같은 크기의 2차원 배열로 초기화했다. 여기서도 마찬가지로 비어 있는 공간임을 나타내기 위해 -1을 사용했다.
+이때 또한 시작 노드로부터 이어진 경로들은 전부 초기화 단계에서 경로를 넣어줬다.
+
+\begin{minted}{c}
+path = malloc(sizeof(int *) * size);
+for (int i = 0; i < size; i++) {
+   path[i] = malloc(sizeof(int) * size);
+   for (int j = 0; j < size; j++) {
+       // 비어 있는 공간이라는 표시로 -1을 사용함
+       path[i][j] = -1;
+   }
+
+   if (current_matrix[0][i] != -1) {  // 1번 노드로부터 해당 정점까지 길이 있는 경우
+       // 경로 생성
+       path[i][0] = 0;
+       path[i][1] = i;
+   }
+}    
+\end{minted}
+
+다음으로 실제 다익스트라 알고리즘을 수행했다. 여기서 눈여겨볼 점은, 다익스트라 알고리즘을 몇 번 직접 해 보면 마지막 반복은 사실상 하는 일이 없다는 것을 알 수 있다.
+따라서 총 반복은 $N - 1$번 일어나면 되며, 시작 노드에서의 거리 계산은 이미 끝난 상태이기 때문에 $N - 2$번만 반복해주면 된다는 것을 쉽게 알아낼 수 있다. 
+
+\begin{minted}{c}
+for (int j = 0; j < size; j++) {
+   // S에 있는 정점들은 더 이상 업데이트할 필요가 없기 때문에
+   // S에 속한 정점들은 스킵해야 함
+   if (in(j, S, current_iter + 1)) continue;
+
+   // 경로가 없는 경우에도 스킵해야 함
+   // 이때 주어지는 그래프는 연결 그래프로 최소한 하나의 경로가 있음이 보장되어 있기 때문에
+   // 별다른 처리 없이 그냥 스킵해도 문제없음
+   if (current_matrix[w][j] == -1) continue;
+
+   dist = current_matrix[w][j] + D[w];
+
+   if (D[j] == -1 || D[j] > dist) {
+       // 경로가 처음 생성되는 경우거나 완전히 다른 경로로 업데이트되는 경우
+       // 이 경우 현재 w까지의 경로 + w에서 해당 노드까지의 경로로 바뀜
+       D[j] = dist;
+       update_path(path, w, j, size);
+   }
+}
+\end{minted}
+
+\paragraph{\texttt{update\_path()}}
+
+여기서 중요한 부분은 \texttt{D}가 업데이트되는 부분이다. \texttt{D}가 업데이트된다는 것은, 해당 노드까지의 경로도 업데이트 되어야 한다는 것을 의미한다. 
+업데이트되는 노드를 \texttt{u}라 하면, \texttt{u}까지의 경로는 다음과 같이 변경되어야 한다.
+
+$$w\text{까지의 최단경로} + w\text{부터 }u\text{까지의 경로}$$
+
+이때 \texttt{u}가 업데이트되는 시점에서 기록된 \texttt{w}까지의 경로는 최단경로임이 보장되고, \texttt{w}부터 \texttt{u}까지의 경로는 \texttt{w-u}이다
+(경로가 업데이트된다는 것은 \texttt{w}부터 \texttt{u}까지 edge가 존재한다는 뜻이기 때문에). 따라서 업데이트되는 \texttt{w}까지의 경로는 다음과 같다.
+
+$$(w\text{까지의 경로}) + u$$
+
+따라서 \texttt{update\_path}는 다음과 같다.
+
+\begin{minted}{c}
+// to를 with로 덮어쓰며 마지막에 to 추가
+void update_path(int **path, int with, int to, int pathsize) {
+   int *wp = path[with];
+   int *tp = path[to];
+
+   memset(tp, -1, sizeof(int) * pathsize);
+
+   while (*wp != -1)
+       *tp++ = *wp++;
+
+   *tp = to;
+}
+\end{minted}
+
+\paragraph{\texttt{free\_all()}} 할당된 동적 메모리들을 순차적으로 해제하는 역할을 한다.
+
+\begin{minted}{c}
+void free_all(biased_matrics *m) {
+    for (int k = 0; k < m->matrics_count; k++) {
+        int size = m->matrics_size[k];
+        int **mat = m->biased_adjacent_matrics[k];
+
+        for (int i = 0; i < size; i++)
+            free(mat[i]);
+
+        free(mat);
+    }
+    free(m->biased_adjacent_matrics);
+    free(m->matrics_size);
+}
+\end{minted}
+
+\FloatBarrier
+\clearpage
+
+\section{다양한 그래프 형태에 대한 수행 결과}
+
+\subsection{Cycle Graph 1}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{cycle_graph_1.jpg}
+        \caption{그래프 구조}
+        \label{fig:cycle_graph_1:graph}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+5
+1 2 4
+2 3
+3 1 5
+4 5
+5 1 3
+        \end{lstlisting}
+        \caption{입력 데이터}
+        \label{fig:cycle_graph_1:input}
+    \end{subfigure}
+    \caption{Cycle Graph Example 1}
+    \label{fig:cycle_graph_1}
+\end{figure}
+
+단순한 트리 구조가 아닌 순환(Cycle) 구조를 포함한 복잡한 방향성 그래프에 대한 탐방 결과이다.
+이 그래프는 모든 정점이 연결되어 있지만, 자칫하면 탐색이 무한 루프에 빠질 수 있는 구조를 가지고 있어 BFS 알고리즘의 
+\texttt{visited}처리가 제대로 작동하는지 확인하기에 적합하다.
+이를 실행하면 다음과 같이 결과가 잘 나온다.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.3\textwidth, keepaspectratio]{cycle_graph_1_result.jpg}
+    \caption{Fig. \ref{fig:cycle_graph_1}에 대한 실행 결과}
+    \label{fig:cycle_graph_1_result}
+\end{figure}
+
+\subsection{Cycle Graph 2}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.25\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{cycle_graph_2.jpg}
+        \caption{그래프 구조}
+        \label{fig:cycle_graph_2:graph}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+6
+1 2 3
+2 4
+3 4
+4 1 5
+5 6
+6 4
+        \end{lstlisting}
+        \caption{입력 데이터}
+        \label{fig:cycle_graph_2:input}
+    \end{subfigure}
+    \caption{Cycle Graph Example 2}
+    \label{fig:cycle_graph_2}
+\end{figure}
+
+4번 정점을 기준으로 순환이 2개 존재하는(\texttt{1 - 2 - 3 - 4}와 \texttt{4 - 5 - 6})
+그래프에서도 잘 작동하는 것을 볼 수 있다.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.3\textwidth, keepaspectratio]{cycle_graph_2_result.jpg}
+    \caption{Fig. \ref{fig:cycle_graph_2}에 대한 실행 결과}
+    \label{fig:cycle_graph_2_result}
+\end{figure}
+
+\subsection{Complete Graph}
+
+overflow가 발생하지 않는다는 점을 보여주기 위해, 전체 연결 그래프인 $K_{100}$을 사용한 테스트도 진행했다.
+추가로 다익스트라 알고리즘도 테스트하기 위한 $K_{100}$ 그래프 edge의 bias는 모두 동일하게 1로 설정했다. 
+파일의 일부만 나타내면 다음과 같다.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true,mathescape=true]
+100
+1 2 3 4 5 6 $\dots$ 100
+2 1 3 4 5 6 $\dots$ 100
+$\dots$
+100 1 2 3 4 5 6 $\dots$ 99
+        \end{lstlisting}
+        \caption{unbiased $K_{100}$}
+        \label{fig:complete_graph:unbiased_input}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true,mathescape=true]
+100
+1 
+2 1 3 1 4 1 5 1 6 1 $\dots$ 100 1
+2 1 1 3 1 4 1 5 1 6 1 $\dots$ 100 1
+$\dots$
+100 1 1 2 1 3 1 4 1 5 1 6 1 $\dots$ 99 1
+        \end{lstlisting}
+        \caption{biased $K_{100}$}
+        \label{fig:complete_graph:biased_input}
+    \end{subfigure}
+    \caption{Complete Graph Example}
+    \label{fig:complete_graph}
+\end{figure}
+
+실행하면 다음과 같이 문제 없이 잘 수행되는 것을 볼 수 있다.
+(출력이 너무 길어 일부만 캡쳐했다)
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.13\textwidth, keepaspectratio]{complete_graph_traverse_result.jpg}
+    \caption{Fig. \ref{fig:complete_graph:unbiased_input}에 대한 탐방 실행 결과}
+    \label{fig:complete_graph_traverse_result}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.35\textwidth, keepaspectratio]{complete_graph_dijkstra_result.jpg}
+    \caption{Fig. \ref{fig:complete_graph:biased_input}에 대한 다익스트라 실행 결과 (일부)}
+    \label{fig:complete_graph_dijkstra_result}
+\end{figure}
+
+\FloatBarrier
+
+\section{토의 사항}
+
+\begin{itemize}
+    \item 협업: GitHub 사용 (https://github.com/flyahn06/DM-graph)
+    \item 언어: C언어 사용
+    \item 역할분담: 탐방 - 정진영, 게렐토야 / 다익스트라 - 안동기, 추민규 / 테스트: 전부
+\end{itemize}
+
+\section{기여도}
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{>{\bfseries}c c p{8cm}}
+        \toprule
+        이름 & 기여도 & 활동 \\
+        \midrule
+        안동기   & 25\% & 다익스트라 구현, 테스트, 최종 보고서 작성 \\
+        추민규   & 25\% & 다익스트라 구현, 테스트, 보고서 작성 \\
+        정진영   & 25\% & 너비 우선 탐색, 테스트, 보고서 작성 \\
+        게렐토야 & 25\% & 깊이 우선 탐색, 테스트, 보고서 작성 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+\end{document}
