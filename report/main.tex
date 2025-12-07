@@ -102,7 +102,7 @@
 
 \subsection{입력}
 
-\subsection{가중치 없는 단순 연결 방향 그래프}
+\subsubsection{가중치 없는 단순 연결 방향 그래프}
 
 \begin{itemize}
     \item 첫 번째 줄에는 노드의 수가 주어진다.
@@ -111,7 +111,7 @@
 \end{itemize}
 
 
-\subsection{가중치 있는 단순 연결 방향 그래프}
+\subsubsection{가중치 있는 단순 연결 방향 그래프}
 
 \begin{itemize}
     \item 첫 번째 줄에는 노드의 수가 주어진다.
@@ -127,6 +127,7 @@
 
 \begin{enumerate}
     \item 주어진 그래프는 연결 그래프이다. (즉, 한 정점으로부터 다른 정점까지 경로가 존재함이 보장된다)
+    \item 주어진 그래프는 단순 그래프이므로 루프가 존재하지 않는다.
     \item 주어진 그래프의 최대 노드 수는 100개이다.
 \end{enumerate}
 
@@ -149,7 +150,7 @@
 
 구현 과정에서는 그래프의 방향성을 반영했다. 입력 파일에서 기준 정점 u와 연결된 인접 정점 \texttt{v}를 읽어 들였을 때, 
 \texttt{adjMatrix[u][v]}의 값을 1로 설정하여 \texttt{u}에서 \texttt{v}로 가는 단방향 경로가 있음을 표시했다. 반대로 경로가 없는 부분은 초기화된 0 값을 그대로 유지함으로써, 
-가중치 없이 방향성만 존재하는 Unbiased Graph의 연결 관계를 인접 행렬에 그대로 옮겨 구현했다.
+가중치 없이 방향성만 존재하는 Unweighted Graph의 연결 관계를 인접 행렬에 그대로 옮겨 구현했다.
 
 예를 들어, 과제 설명 파일에서 ex1으로 제시된 예시 파일은 다음과 같은 인접행렬로 표현된다.
 
@@ -166,7 +167,7 @@
 
 \subsection{다익스트라 알고리즘에서의 표현 방법}
 
-기본적으로 unbiased graph와 비슷하게 인접 행렬을 통해 그래프를 표현하지만, 여기서는 가중치를 기록해야 하기 때문에 경로가 있으면 1 대신 해당 edge의 가중치를 기록해 표현했다. 
+기본적으로 unweighted graph와 비슷하게 인접 행렬을 통해 그래프를 표현하지만, 여기서는 가중치를 기록해야 하기 때문에 경로가 있으면 1 대신 해당 edge의 가중치를 기록해 표현했다. 
 
 여기서 중요한 것은 자기 자신까지의 거리는 항상 0이기 때문에, 경로가 없다는 것을 0으로 표현할 수 없다는 것이다. 
 따라서 경로가 없는 경우 0 대신 -1로 표현되도록 했다. 예를 들어, 프로젝트에서 ex3으로 제시한 파일은 다음과 같은 인접 행렬로 표현된다. 
@@ -202,18 +203,18 @@ BFS는 정점들을 방문한 순서대로 저장했다가 가장 먼저 저장�
 큐의 데이터 관리를 위해 현재 데이터가 나가는 위치인 \texttt{front}(출구)와 데이터가 들어오는 위치인 \texttt{rear}(입구)라는 두 개의 인덱스 변수를 함께 선언하여 
 큐의 상태를 제어할 수 있도록 설계했다.
 
-\paragraph{\texttt{struct biased\_matrics}}
+\paragraph{\texttt{struct weighted\_matrics}}
 
 \begin{minted}{c}
 typedef struct {
    int matrics_count;  // 파일로부터 읽은 행렬 개수
    int *matrics_size;  // 읽어들인 행렬들의 크기
-   int ***biased_adjacent_matrics;  // 실제 가중인접행렬들의 배열
-} biased_matrics;
+   int ***weighted_adjacent_matrics;  // 실제 가중인접행렬들의 배열
+} weighted_matrics;
 \end{minted}
 
 이 구조체는 파일로부터 생성한 인접 행렬들을 담고 있는 구조체이다. \texttt{matrics\_count} 필드에는 파일에서 읽어들인 그래프의 총 개수가 들어가며, 
-\texttt{matrics\_size}는 읽어들인 인접 행렬들의 크기를 담고 있다. \texttt{biased\_adjacent\_matrics}는 실제 가중 인접 행렬을 담고 있는 배열이다. 
+\texttt{matrics\_size}는 읽어들인 인접 행렬들의 크기를 담고 있다. \texttt{weighted\_adjacent\_matrics}는 실제 가중 인접 행렬을 담고 있는 배열이다. 
 각각의 슬롯은 \texttt{int}형의 2차원 배열(\texttt{int **})을 담고 있기 때문에 삼중 포인터로 선언해뒀다. 
 
 
@@ -344,10 +345,10 @@ dfs 는 한 번 방문한 정점을 다시 방문하지 않는다는 원칙을 �
 따라서 for 반복문을 통해 모든 정점을 0 으로 설정하여 완전히 새로운 탐색 상태를 만든다. 초기화가 끝나면 \texttt{dfs\_recursive(StartNode)}를 호출하여 실제 DFS 탐색이 시작된다. 
 이 재귀 함수는 현재 정점을 방문 처리하고 출력한 뒤, 그 정점과 연결된 이웃들을 찾기 위해 1번 정점부터 마지막 정점까지 반복문을 돌린다. 
 
-반목문 내부에서는 두 가지 조건을 검사한다.
+반복문 내부에서는 두 가지 조건을 검사한다.
 
 \begin{enumerate}
-    \item \texttt{adjMatrix[node][i] == 1}: 현재 정점과 \texttt{i} 정점이 인접해 있는 확인한다
+    \item \texttt{adjMatrix[node][i] == 1}: 현재 정점과 \texttt{i} 정점이 인접해 있는지 확인한다
     \item \texttt{visited[i] == 0}: 아직 방문하지 않은 정점인지 확인한다
 \end{enumerate}
 
@@ -379,7 +380,7 @@ void dfs(int startNode) {
     // 이전 그래프 방문 혼작이 남아있지 않도록 완전히 초기화
     for (int i = 1; i <= numVertices; i++)
         visited[i] = 0;
-    // 재귀 DFC 시작
+    // 재귀 DFS 시작
     // startNode(보통 1번)에서 탐색을 시작함
     dfs_recursive(startNode, 1);
     // 3. 줄바꿈 (출력 마무리)
@@ -470,7 +471,7 @@ $$w\text{까지의 최단경로} + w\text{부터 }u\text{까지의 경로}$$
 
 $$(w\text{까지의 경로}) + u$$
 
-따라서 \texttt{update\_path}는 다음과 같다.
+따라서 \texttt{update\_path()}는 다음과 같다.
 
 \begin{minted}{c}
 // to를 with로 덮어쓰며 마지막에 to 추가
@@ -490,27 +491,37 @@ void update_path(int **path, int with, int to, int pathsize) {
 \paragraph{\texttt{free\_all()}} 할당된 동적 메모리들을 순차적으로 해제하는 역할을 한다.
 
 \begin{minted}{c}
-void free_all(biased_matrics *m) {
+void free_all(weighted_matrics *m) {
     for (int k = 0; k < m->matrics_count; k++) {
         int size = m->matrics_size[k];
-        int **mat = m->biased_adjacent_matrics[k];
+        int **mat = m->weighted_adjacent_matrics[k];
 
         for (int i = 0; i < size; i++)
             free(mat[i]);
 
         free(mat);
     }
-    free(m->biased_adjacent_matrics);
+    free(m->weighted_adjacent_matrics);
     free(m->matrics_size);
 }
 \end{minted}
 
-\FloatBarrier
 \clearpage
 
 \section{다양한 그래프 형태에 대한 수행 결과}
 
-\subsection{Cycle Graph 1}
+{
+\centering
+\fbox{
+  \parbox{0.9\linewidth}{
+    테스트에 사용한 그래프 파일 중 보고서에 넣기 너무 긴 것이 일부 있어서,
+    사용한 파일들은 모두 \texttt{test/} 폴더 안에 첨부해 두었습니다.
+  }
+}
+\par
+}
+
+\subsection{Graph 1}
 
 \begin{figure}[H]
     \centering
@@ -537,19 +548,57 @@ void free_all(biased_matrics *m) {
     \label{fig:cycle_graph_1}
 \end{figure}
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{cycle_graph_1_weighted.jpg}
+        \caption{그래프 구조}
+        \label{fig:cycle_graph_1_weighted:graph}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+5
+1 2 2 4 3
+2 3 2
+3 1 10 5 2
+4 5 3
+5 1 10 3 10
+        \end{lstlisting}
+        \caption{입력 데이터}
+        \label{fig:cycle_graph_1:input}
+    \end{subfigure}
+    \caption{Cycle Weighted Graph Example 1}
+    \label{fig:cycle_graph_1_weighted}
+\end{figure}
+
 단순한 트리 구조가 아닌 순환(Cycle) 구조를 포함한 복잡한 방향성 그래프에 대한 탐방 결과이다.
-이 그래프는 모든 정점이 연결되어 있지만, 자칫하면 탐색이 무한 루프에 빠질 수 있는 구조를 가지고 있어 BFS 알고리즘의 
-\texttt{visited}처리가 제대로 작동하는지 확인하기에 적합하다.
-이를 실행하면 다음과 같이 결과가 잘 나온다.
+이 그래프는 모든 정점이 연결되어 있지만, 자칫하면 탐색이 무한 루프에 빠질 수 있는 구조를 가지고 있어 탐방 알고리즘과 다익스트라 알고리즘이
+잘 작동하는지 확인할 수 있다. 이를 실행하면 다음과 같이 결과가 잘 나온다.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=0.3\textwidth, keepaspectratio]{cycle_graph_1_result.jpg}
-    \caption{Fig. \ref{fig:cycle_graph_1}에 대한 실행 결과}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{cycle_graph_1_result.jpg}
+        \caption{Fig.~\ref{fig:cycle_graph_1}에 대한 탐방 실행 결과}
+        \label{fig:cycle_graph_1_traverse_result}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{cycle_graph_1_dijkstra_result.png}
+        \caption{Fig.~\ref{fig:cycle_graph_1_weighted}에 대한 다익스트라 실행 결과}
+        \label{fig:cycle_graph_1_dijkstra_result}
+    \end{subfigure}
+
+    \caption{탐방 및 다익스트라 결과}
     \label{fig:cycle_graph_1_result}
 \end{figure}
 
-\subsection{Cycle Graph 2}
+
+\subsection{Graph 2}
 
 \begin{figure}[H]
     \centering
@@ -577,20 +626,144 @@ void free_all(biased_matrics *m) {
     \label{fig:cycle_graph_2}
 \end{figure}
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{cycle_graph_2_weighted.jpg}
+        \caption{그래프 구조}
+        \label{fig:cycle_graph_2_weighted:graph}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+6
+1 2 2 3 4
+2 4 7
+3 4 1
+4 1 3 5 2
+5 6 2
+6 4 1
+        \end{lstlisting}
+        \caption{입력 데이터}
+        \label{fig:cycle_graph_2:input}
+    \end{subfigure}
+    \caption{Cycle Weighted Graph Example 2}
+    \label{fig:cycle_graph_2_weighted}
+\end{figure}
+
 4번 정점을 기준으로 순환이 2개 존재하는(\texttt{1 - 2 - 3 - 4}와 \texttt{4 - 5 - 6})
 그래프에서도 잘 작동하는 것을 볼 수 있다.
 
+
 \begin{figure}[H]
     \centering
-    \includegraphics[height=0.3\textwidth, keepaspectratio]{cycle_graph_2_result.jpg}
-    \caption{Fig. \ref{fig:cycle_graph_2}에 대한 실행 결과}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{cycle_graph_2_result.jpg}
+        \caption{Fig.~\ref{fig:cycle_graph_2}에 대한 탐방 실행 결과}
+        \label{fig:cycle_graph_2_traverse_result}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{cycle_graph_2_dijkstra_result.png}
+        \caption{Fig.~\ref{fig:cycle_graph_2_weighted}에 대한 다익스트라 실행 결과}
+        \label{fig:cycle_graph_2_dijkstra_result}
+    \end{subfigure}
+
+    \caption{탐방 및 다익스트라 결과}
     \label{fig:cycle_graph_2_result}
 \end{figure}
 
-\subsection{Complete Graph}
+\subsection{Graph 3}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{graph_4.png}
+        \caption{그래프 구조}
+        \label{fig:graph_4:graph}
+    \end{subfigure}
+    \hfil
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+9
+1 2 3
+2 3 4
+3 4 7
+4 5 6 7 8 9
+5 2 6
+6 8
+7 9
+8 9
+9
+        \end{lstlisting}
+        \caption{입력 데이터}
+        \label{fig:graph_4:input}
+    \end{subfigure}
+    \caption{Graph Example 4}
+    \label{fig:graph_4}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{graph_4_weighted.png}
+        \caption{그래프 구조}
+        \label{fig:graph_4_weighted:graph}
+    \end{subfigure}
+    \hfil
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+9
+1 2 8 3 12
+2 3 13 4 25
+3 4 14 7 21
+4 5 20 6 8 7 12 8 12 9 16
+5 2 9 6 19
+6 8 11
+7 9 11
+8 9 9
+9
+        \end{lstlisting}
+        \caption{입력 데이터}
+        \label{fig:graph_4_weighted:input}
+    \end{subfigure}
+    \caption{Weighted Graph Example 4}
+    \label{fig:graph_4_weighted}
+\end{figure}
+
+위와 같은 그래프는 두 자릿수의 다양한 가중치(8, 12, 25, 16, $\dots$)와 9개의 노드, ($2-4-5-2$) 같은 사이클이 존재하기에 알고리즘을 테스트하기 적합한 그래프이다.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{graph_4_result.png}
+        \caption{Fig.~\ref{fig:graph_4}에 대한 탐방 실행 결과}
+        \label{fig:graph_4_result}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{graph_4_dijkstra_result.png}
+        \caption{Fig.~\ref{fig:graph_4_weighted}에 대한 다익스트라 실행 결과}
+        \label{fig:graph_4_dijkstra_result}
+    \end{subfigure}
+
+    \caption{탐방 및 다익스트라 결과}
+    \label{fig:graph_4_results}
+\end{figure}
+
+\subsection{Graph 4}
 
 overflow가 발생하지 않는다는 점을 보여주기 위해, 전체 연결 그래프인 $K_{100}$을 사용한 테스트도 진행했다.
-추가로 다익스트라 알고리즘도 테스트하기 위한 $K_{100}$ 그래프 edge의 bias는 모두 동일하게 1로 설정했다. 
+추가로 다익스트라 알고리즘도 테스트하기 위한 $K_{100}$ 그래프 edge의 weight는 모두 동일하게 1로 설정했다. 
 파일의 일부만 나타내면 다음과 같다.
 
 \begin{figure}[H]
@@ -604,21 +777,20 @@ overflow가 발생하지 않는다는 점을 보여주기 위해, 전체 연결 
 $\dots$
 100 1 2 3 4 5 6 $\dots$ 99
         \end{lstlisting}
-        \caption{unbiased $K_{100}$}
-        \label{fig:complete_graph:unbiased_input}
+        \caption{unweighted $K_{100}$}
+        \label{fig:complete_graph:unweighted_input}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
         \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true,mathescape=true]
 100
-1 
-2 1 3 1 4 1 5 1 6 1 $\dots$ 100 1
-2 1 1 3 1 4 1 5 1 6 1 $\dots$ 100 1
+1 2 1 3 1 4 1 5 1 $\dots$ 100 1
+2 1 1 3 1 4 1 5 1 $\dots$ 100 1
 $\dots$
-100 1 1 2 1 3 1 4 1 5 1 6 1 $\dots$ 99 1
+100 1 1 2 1 3 1 4 1 5 1 $\dots$ 99 1
         \end{lstlisting}
-        \caption{biased $K_{100}$}
-        \label{fig:complete_graph:biased_input}
+        \caption{weighted $K_{100}$}
+        \label{fig:complete_graph:weighted_input}
     \end{subfigure}
     \caption{Complete Graph Example}
     \label{fig:complete_graph}
@@ -629,31 +801,76 @@ $\dots$
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=0.13\textwidth, keepaspectratio]{complete_graph_traverse_result.jpg}
-    \caption{Fig. \ref{fig:complete_graph:unbiased_input}에 대한 탐방 실행 결과}
-    \label{fig:complete_graph_traverse_result}
+
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includegraphics[height=0.13\textwidth, keepaspectratio]{complete_graph_traverse_result.jpg}
+        \caption{Fig.~\ref{fig:complete_graph:unweighted_input}에 대한 탐방 실행 결과}
+        \label{fig:complete_graph_traverse_result}
+    \end{subfigure}
+
+    \vspace{0.8em}
+
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includegraphics[height=0.35\textwidth, keepaspectratio]{complete_graph_dijkstra_result.jpg}
+        \caption{Fig.~\ref{fig:complete_graph:weighted_input}에 대한 다익스트라 실행 결과 (일부)}
+        \label{fig:complete_graph_dijkstra_result}
+    \end{subfigure}
+
+    \caption{탐방 및 다익스트라 결과}
+    \label{fig:complete_graph_results}
 \end{figure}
+
+
+
+\subsection{Graph 5}
+
+정점의 개수가 최대일 때를 테스트했으므로, 정점의 개수가 최소일 때도 테스트했다. 
+
+\begin{figure}[H]
+    \begin{lstlisting}[basicstyle=\ttfamily\small,breaklines=true]
+1
+1
+    \end{lstlisting}
+    \caption{Graph Example 5}
+    \label{fig:graph_5}
+\end{figure}
+
+정점의 개수가 최소일 때도 별다른 오류 없이 잘 실행되는 것을 볼 수 있었다.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=0.35\textwidth, keepaspectratio]{complete_graph_dijkstra_result.jpg}
-    \caption{Fig. \ref{fig:complete_graph:biased_input}에 대한 다익스트라 실행 결과 (일부)}
-    \label{fig:complete_graph_dijkstra_result}
-\end{figure}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{graph_5_result.png}
+        \caption{Fig.~\ref{fig:graph_5}에 대한 탐방 실행 결과}
+        \label{fig:graph_5_result}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{graph_5_dijkstra_result.png}
+        \caption{Fig.~\ref{fig:graph_5}에 대한 다익스트라 실행 결과}
+        \label{fig:graph_5_dijkstra_result}
+    \end{subfigure}
 
-\FloatBarrier
+    \caption{탐방 및 다익스트라 결과}
+    \label{fig:graph_5_results}
+\end{figure}
 
 \section{토의 사항}
 
 \begin{itemize}
     \item 협업: GitHub 사용 (https://github.com/flyahn06/DM-graph)
     \item 언어: C언어 사용
+    \item 보고서 작성: Google Docs + LaTeX
     \item 역할분담: 탐방 - 정진영, 게렐토야 / 다익스트라 - 안동기, 추민규 / 테스트: 전부
 \end{itemize}
 
 \section{기여도}
 
-\begin{table}[htbp]
+\begin{table}[h]
     \centering
     \begin{tabular}{>{\bfseries}c c p{8cm}}
         \toprule
