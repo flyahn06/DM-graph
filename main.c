@@ -35,7 +35,7 @@ int numVertices;
 // dijkstra.c
 int **allocate_matrix(int);
 void read_file(const char *, weighted_matrics *);
-int min(int *, int, int*, int);
+int find_min(int *, int, int*, int);
 int in(int, int*, int);
 void dijkstra(weighted_matrics *);
 void update_path(int **, int, int, int);
@@ -277,7 +277,7 @@ void dijkstra(weighted_matrics *matrics) {
 
         current_iter = 1;
         for (int i = 0; i < size - 2; i++) {
-            w = min(D, size, S, current_iter);  // V-S에 속하는 정점 중 D가 최소인 정점 탐색
+            w = find_min(D, size, S, current_iter);  // V-S에 속하는 정점 중 D가 최소인 정점 탐색
             S[current_iter] = w;
 
             for (int j = 0; j < size; j++) {
@@ -343,7 +343,7 @@ int in(int needle, int *haystack, int size) {
     return 0;
 }
 
-int min(int *target, int size, int *without, int without_size) {
+int find_min(int *target, int size, int *without, int without_size) {
     int min_index = -1;
     int min_element = -1;
 

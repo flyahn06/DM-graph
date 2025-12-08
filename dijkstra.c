@@ -10,7 +10,7 @@ typedef struct {
 
 int **allocate_matrix(int);
 void read_file(const char *, biased_matrics *);
-int min(int *, int, int*, int);
+int find_min(int *, int, int*, int);
 int in(int, int*, int);
 void dijkstra(biased_matrics *);
 void update_path(int **, int, int, int);
@@ -86,7 +86,7 @@ void dijkstra(biased_matrics *matrics) {
         S[0] = 0;
         current_iter = 1;
         for (int i = 0; i < size - 2; i++) {
-            w = min(D, size, S, current_iter);
+            w = find_min(D, size, S, current_iter);
             S[current_iter] = w;
 
             // compare
@@ -164,7 +164,7 @@ int in(int needle, int *haystack, int size) {
     return 0;
 }
 
-int min(int *target, int size, int *without, int without_size) {
+int find_min(int *target, int size, int *without, int without_size) {
     int min_index = -1;
     int min_element = -1;
 
